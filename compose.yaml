@@ -62,6 +62,12 @@ services:
     deploy:
       mode: replicated
       replicas: 1
+    healthcheck:
+      test: ["CMD-SHELL", "nc 0.0.0.0 10000 -z && nc 0.0.0.0 10001 -z && nc 0.0.0.0 10002 -z"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
   mongodb:
     image: mongo:8.0-noble
@@ -77,6 +83,12 @@ services:
     deploy:
       mode: replicated
       replicas: 1
+    healthcheck:
+      test: ["CMD", "mongo", "--eval", "db.stats().ok == 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 15s
 
   backend:
     depends_on:
