@@ -22,6 +22,7 @@ services:
       timeout: 5s
       retries: 5
       start_period: 45s
+    restart: always
 
   sso:
     depends_on:
@@ -47,6 +48,7 @@ services:
         limits:
           cpus: '0.50'
           memory: 256M
+    restart: always
 
   azurite:
     image: mcr.microsoft.com/azure-storage/azurite:3.33.0-amd64
@@ -68,6 +70,7 @@ services:
       timeout: 5s
       retries: 5
       start_period: 10s
+    restart: always
 
   mongodb:
     image: mongo:8.0-noble
@@ -84,18 +87,19 @@ services:
       mode: replicated
       replicas: 1
     healthcheck:
-      test: ["CMD", "mongo", "--eval", "db.stats().ok == 1"]
+      test: ["CMD-SHELL", "echo 'db.runCommand(\"ping\").ok' | mongosh mongodb://admin:password@localhost:27017/ --quiet | grep -q 1"]
       interval: 30s
       timeout: 5s
       retries: 5
       start_period: 15s
+    restart: always
 
   backend:
     depends_on:
       azurite:
-        condition: service_started
+        condition: service_healthy
       mongodb:
-        condition: service_started
+        condition: service_healthy
       sso:
         condition: service_healthy
     build:
@@ -118,6 +122,7 @@ services:
       timeout: 5s
       retries: 5
       start_period: 10s
+    restart: always
 
   frontend:
     depends_on:
@@ -145,6 +150,7 @@ services:
       timeout: 5s
       retries: 5
       start_period: 5s
+    restart: always
 
   proxy:
     build:
@@ -173,6 +179,7 @@ services:
       timeout: 5s
       retries: 5
       start_period: 10s
+    restart: always
 
 volumes:
   sqldb-volume: 
