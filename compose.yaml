@@ -1,0 +1,172 @@
+name: productheim
+services:
+  sql-server:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    volumes:
+      - sqldb-volume:/var/opt/mssql:rw
+    # ports:
+    #   - 1433:1433
+    environment:
+      - ACCEPT_EULA=Y
+      - MSSQL_SA_PASSWORD=Abcd@1234
+      - MSSQL_PID=Developer
+      # - MSSQL_DATA_DIR=/data
+    networks:
+      - back-net
+    deploy:
+      mode: replicated
+      replicas: 1
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P 'Abcd@1234' -Q 'SELECT 1;' -No"]
+      interval: 1m
+      timeout: 5s
+      retries: 5
+      start_period: 45s
+
+  sso:
+    depends_on:
+      sql-server:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/sso/health || exit 1"]
+      interval: 1m
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    build:
+      context: sso
+      dockerfile: Dockerfile
+    # ports:
+    #   - 80:8080
+    networks:
+      - back-net
+    deploy:
+      mode: replicated
+      replicas: 1
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 256M
+
+  azurite:
+    image: mcr.microsoft.com/azure-storage/azurite:3.33.0-amd64
+    working_dir: /data
+    volumes:
+      - azurite-volume:/data:rw
+    # ports:
+    #   - 3500:10000
+    #   - 3501:10001
+    #   - 3502:10002
+    networks:
+      - back-net
+    deploy:
+      mode: replicated
+      replicas: 1
+
+  mongodb:
+    image: mongo:8.0-noble
+    volumes:
+      - mongodb-volume:/data/db:rw
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=password
+    # ports:
+    #   - 27017:27017
+    networks:
+      - back-net
+    deploy:
+      mode: replicated
+      replicas: 1
+
+  backend:
+    depends_on:
+      azurite:
+        condition: service_started
+      mongodb:
+        condition: service_started
+      sso:
+        condition: service_healthy
+    build:
+      context: productheim-api
+      dockerfile: Dockerfile
+    # ports:
+    #   - 80:8080
+    networks:
+      - back-net
+    deploy:
+      mode: replicated
+      replicas: 2
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 256M
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/productheim/health || exit 1"]
+      interval: 1m
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+  frontend:
+    depends_on:
+      backend:
+        condition: service_healthy
+      sso:
+        condition: service_healthy
+    build:
+      context: productheim-ui
+      dockerfile: Dockerfile
+    # ports:
+    #   - 80:80
+    networks:
+      - front-net
+    deploy:
+      mode: replicated
+      replicas: 1
+      resources:
+        limits:
+          cpus: '0.50'
+          memory: 64M
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost/index.html || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+
+  proxy:
+    build:
+      context: proxy
+      dockerfile: Dockerfile
+    ports:
+      - 80:80
+    depends_on:
+      backend:
+        condition: service_healthy
+      frontend:
+        condition: service_healthy
+    networks:
+      - back-net
+      - front-net
+    deploy:
+      mode: replicated
+      replicas: 1
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 128m
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost/ || exit 1"]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+
+volumes:
+  sqldb-volume: 
+  azurite-volume: 
+  mongodb-volume: 
+
+networks:
+  front-net: {}
+  back-net: {}

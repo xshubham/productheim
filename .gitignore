@@ -1,0 +1,12 @@
+# subrepos
+**/productheim-api
+**/productheim-api/*
+
+**/productheim-ui
+**/productheim-ui/*
+
+**/proxy
+**/proxy/*
+
+**/sso
+**/sso/*
