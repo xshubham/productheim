@@ -29,7 +29,7 @@ create table token_metadata (
 go
 
 insert into users(username, displayname, [password], [role])
-values ('shubhamxst@gmail.com', 'Shubham Kumar', '89e01536ac207279409d4de1e5253e01f4a1769e696db0d6062ca9b8f56767c8', 'user'), --mypassword
+values ('shubham@email.com', 'Shubham Kumar', '89e01536ac207279409d4de1e5253e01f4a1769e696db0d6062ca9b8f56767c8', 'user'), --mypassword
 ('test@email.com', 'test', '85d8fa8fa6bdd3db050005b44ec3c5302b389ced054ec7d59eac2edba2251946', 'admin') --thepassword
 
 select * from users;
