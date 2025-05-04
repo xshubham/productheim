@@ -1,0 +1,9 @@
+[submodule "productheim-sso"]
+	path = productheim-sso
+	url = https://github.com/xshubham/productheim-sso.git
+[submodule "productheim-ui"]
+	path = productheim-ui
+	url = https://github.com/xshubham/productheim-ui.git
+[submodule "productheim-api"]
+	path = productheim-api
+	url = https://github.com/xshubham/productheim-api.git
