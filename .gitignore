@@ -1,15 +1,15 @@
 # subrepos
-**/productheim-api
-**/productheim-api/*
+# **/productheim-api
+# **/productheim-api/*
 
-**/productheim-ui
-**/productheim-ui/*
+# **/productheim-ui
+# **/productheim-ui/*
 
-**/proxy
-**/proxy/*
+# **/proxy
+# **/proxy/*
 
-**/sso
-**/sso/*
+# **/sso
+# **/sso/*
 
 # terraform
 # Local .terraform directories
